@@ -1,0 +1,1 @@
+java -jar PackageXLSTooler.jar \data\Excel 1 1 0 0 com 0 0 0 1 1 {0} \data\xml \res\assets\xml

@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project name="autobuild" default="build" basedir=".">
+    <property file="build.properties" />
+    <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/> 
+    <target name="build" depends="init,compile_main_pro" />
+    <target name="init">
+        <delete dir="${DEPLOY_DIR}/${SWF_FILE_NAME}" />
+        <delete dir="${DEPLOY_DIR}/assets" />
+        <copy todir="${DEPLOY_DIR}/assets">
+            <fileset dir="${SRC_DIR}/assets" />
+        </copy>
+    </target>
+    <target name="compile_main_pro">
+        <mxmlc file="${SRC_DIR}/${MAIN_PRO_AS}" output="${DEPLOY_DIR}/${MAIN_PRO_FILE_NAME}"
+			   actionscript-file-encoding="UTF-8"    keep-generated-actionscript="false" 
+		       incremental="false">
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <load-config filename="${COMPILE_XML}"/>
+			<source-path path-element="${FLEX_HOME}/frameworks" />  
+			<compiler.library-path dir="${FLEX_HOME}/frameworks" append="true">  
+                <include name="libs" />  
+                <include name="/locale/${application.locale}" />  
+            </compiler.library-path>
+			<!-- custom mc --> 
+            <compiler.library-path dir="${PRO_DIC}" append="true">
+				<include name="libs" />
+            </compiler.library-path>
+			<!--source code --> 
+			<compiler.source-path path-element="${SRC_DIR}"/>
+			<static-link-runtime-shared-libraries>true</static-link-runtime-shared-libraries>
+			<compiler.debug>false</compiler.debug>
+			<!-- custom compile --> 
+        </mxmlc>
+		<delete>
+			<!-- Deletes cache file -->
+			<fileset dir="${DEPLOY_DIR}" includes="${MAIN_PRO_FILE_NAME}.cache" defaultexcludes="false"/>  
+        </delete>  
+    </target>
+
+	 <target name="compile_main">
+        <mxmlc file="${SRC_DIR}/${MAIN_AS}" output="${DEPLOY_DIR}/${MAIN_FILE_NAME}"
+			   actionscript-file-encoding="UTF-8"    keep-generated-actionscript="false" 
+		       incremental="false">
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <load-config filename="${COMPILE_XML}"/>
+			<source-path path-element="${FLEX_HOME}/frameworks" />  
+			<compiler.library-path dir="${FLEX_HOME}/frameworks" append="true">  
+                <include name="libs" />  
+                <include name="/locale/${application.locale}" />  
+            </compiler.library-path>
+			<!-- custom mc --> 
+            <compiler.library-path dir="${PRO_DIC}" append="true">
+				<include name="libs" />
+            </compiler.library-path>
+			<!--source code --> 
+			<compiler.source-path path-element="${SRC_DIR}"/>
+			<static-link-runtime-shared-libraries>true</static-link-runtime-shared-libraries>
+			<compiler.debug>false</compiler.debug>
+			<!-- custom compile --> 
+        </mxmlc>
+		<delete>
+			<!-- Deletes cache file -->
+			<fileset dir="${DEPLOY_DIR}" includes="${MAIN_FILE_NAME}.cache" defaultexcludes="false"/>  
+        </delete>  
+    </target>
+
+	 <target name="compile_createrole">
+        <mxmlc file="${SRC_DIR}/${CREATE_ROLE_AS}" output="${DEPLOY_DIR}/${CREATE_ROLE_NAME}"
+			   actionscript-file-encoding="UTF-8"    keep-generated-actionscript="false" 
+		       incremental="false">
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <load-config filename="${COMPILE_XML}"/>
+			<source-path path-element="${FLEX_HOME}/frameworks" />  
+			<compiler.library-path dir="${FLEX_HOME}/frameworks" append="true">  
+                <include name="libs" />  
+                <include name="/locale/${application.locale}" />  
+            </compiler.library-path>
+			<!-- custom mc --> 
+            <compiler.library-path dir="${PRO_DIC}" append="true">
+				<include name="libs" />
+            </compiler.library-path>
+			<!--source code --> 
+			<compiler.source-path path-element="${SRC_DIR}"/>
+			<static-link-runtime-shared-libraries>true</static-link-runtime-shared-libraries>
+			<compiler.debug>false</compiler.debug>
+			<!-- custom compile --> 
+        </mxmlc>
+		<delete>
+			<!-- Deletes cache file -->
+			<fileset dir="${DEPLOY_DIR}" includes="${CREATE_ROLE_NAME}.cache" defaultexcludes="false"/>  
+        </delete>  
+    </target>
+</project>

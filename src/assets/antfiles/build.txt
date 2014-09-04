@@ -1,0 +1,20 @@
+﻿# 设置FLEX SDK的路径
+FLEX_HOME={1}
+ 
+# 设置源文件路径
+# {$basedir} 就是本文件所在的目录
+PRO_CODE = code
+MAIN_PRO_AS = DOTA_Main.as
+MAIN_AS = DOTA.as
+CREATE_ROLE_AS = CreatRole.as
+SRC_DIR = ${basedir}/${PRO_CODE}/src
+PRO_DIC = ${basedir}/${PRO_CODE}
+COMPILE_XML=${SRC_DIR}/compile/config.xml
+# libs目录，一般用来放swc文件
+LIBS_DIR =${PRO_DIC}/libs
+ 
+# 这个就是Flash Builder建立的bin-debug
+DEPLOY_DIR = {0}
+MAIN_PRO_FILE_NAME = DOTA_Main.swf
+MAIN_FILE_NAME = DOTA.swf
+CREATE_ROLE_NAME = CreatRole.swf

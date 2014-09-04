@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="280" height="360" creationComplete="group1_creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.coolexp.managers.ExpPackQueneManager;
+			import com.coolexp.managers.ExpToolerManager;
+			import com.coolexp.vo.ExpCompileVO;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				PopUpManager.removePopUp(this);
+				ExpToolerManager.getInstance().publishSuccess(0);
+			}
+			
+			protected function button2_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				PopUpManager.removePopUp(this);
+				ExpToolerManager.getInstance().showPackWin();
+				ExpPackQueneManager.getInstance().start();
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				var a:Array = ExpToolerManager.getInstance().compileList = ExpToolerManager.getInstance().getCompileList();
+				listCompile.dataProvider = new ArrayCollection(a);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:BorderContainer width="100%" height="100%" backgroundColor="0x888888">
+		<s:VGroup width="100%" height="100%" paddingTop="15">
+			<s:Label text="编译配置" width="100%" textAlign="center" fontSize="20" fontWeight="bold" fontFamily="黑体" />
+			<s:HGroup width="100%" height="100%">
+				<s:List width="100%" height="100%" id="listCompile" itemRenderer="com.coolexp.winw.ExpListCONFIGItem"></s:List>
+			</s:HGroup>
+			<s:HGroup width="100%" horizontalAlign="center" paddingBottom="10">
+				<s:Button click="button1_clickHandler(event)" height="30" label="取消发布"/>
+				<s:Button click="button2_clickHandler(event)" height="30" label="确认发布"/>
+			</s:HGroup>
+		</s:VGroup>
+	</s:BorderContainer>
+</s:Group>

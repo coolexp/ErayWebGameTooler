@@ -1,0 +1,244 @@
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" showStatusBar="false" close="windowedapplication1_closeHandler(event)" creationComplete="windowedapplication1_creationCompleteHandler(event)" width="1000" height="700"
+					   xmlns:mx="library://ns.adobe.com/flex/mx">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.coolexp.ExpConfig;
+			import com.coolexp.ExpPIDKey;
+			import com.coolexp.managers.ExpGameResDataManager;
+			import com.coolexp.managers.ExpLogManager;
+			import com.coolexp.managers.ExpPackQueneManager;
+			import com.coolexp.managers.ExpProcessManager;
+			import com.coolexp.managers.ExpToolerManager;
+			import com.coolexp.responder.ExpPackItem;
+			import com.coolexp.skin.ExpCheckBoxSkin;
+			import com.coolexp.winw.ExpXMLConfigWin;
+			
+			import mx.controls.Alert;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.utils.StringUtil;
+			private var currentType:int=1;
+			private var sourcePath:String="";
+			private var targetPath:String = "";
+			private var flexSDKPath:String = "";
+			private static const SOURCE_TYPE:int = 1;
+			private static const TARGET_TYPE:int = 2;
+			private static const SDK_TYPE:int = 3;
+			protected function selectSourceHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				currentType = SOURCE_TYPE;
+				selectFile();
+			}
+			protected function selectSDKPathHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				currentType = SDK_TYPE;
+				selectFile();
+			}
+			private function selectFile():void{
+				var file:File = new File();
+				file.addEventListener(Event.SELECT,onSelectHandler);
+				file.browseForDirectory("选择目录");
+			}
+			protected function selectTargetHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				currentType = TARGET_TYPE;
+				selectFile();
+			}
+			protected function publishHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(sourcePath==""||targetPath==""||flexSDKPath==""){
+					Alert.show("源目录、目标目录、SDK目录不能为空");
+				}else{
+					outPutTxt.text = "";
+					
+					ExpToolerManager.getInstance().publishHandler(ExpConfig.create(flexSDKPath,sourcePath,targetPath,releaseItem.selected,false,mainItem.selected,createRoleItem.selected,frameItem.selected,imgItem.selected,animationItem.selected,uiItem.selected,excelItem.selected,resVerItem.selected,gameResItem.selected,int(k1.text),int(k2.text)),this);
+					var i:IFlexDisplayObject= PopUpManager.createPopUp(this,ExpXMLConfigWin,true);
+					PopUpManager.centerPopUp(i);
+				}
+			}
+			
+			protected function onSelectHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				var file:File = event.target as File;
+				if(file){
+					file.removeEventListener(Event.SELECT,onSelectHandler);
+					var value:String = StringUtil.trim(file.nativePath);
+					drawPath(value,currentType);
+					saveSelectConfigPath(value);
+				}
+			}
+			private function drawPath(value:String,type:int):void{
+				if(type==SOURCE_TYPE){
+					sPath.text = sourcePath = value;
+				}else if(type==TARGET_TYPE){
+					tPath.text = targetPath = value;
+				}else if(type==SDK_TYPE){
+					sdkPath.text = flexSDKPath = value;
+					flexSDKPath = flexSDKPath.replace(/\\/g,"/");
+				}
+			}
+			private function saveSelectConfigPath(str:String):void{
+				var file:File = File.applicationStorageDirectory.resolvePath(CONFIG_FILE);
+				var obj:Object;
+				if(file.exists){
+					var ba:ByteArray = ExpToolerManager.getInstance().getFileBA(file);
+					ba.uncompress();
+					obj = ba.readObject();
+				}else{
+					obj = {};
+				}
+				if(currentType==SOURCE_TYPE){
+					obj.sourcePath = str;
+				}else if(currentType==TARGET_TYPE){
+					obj.targetPath = str;
+				}else if(currentType==SDK_TYPE){
+					obj.flexSDKPath = str;
+				}
+				var fileBa:ByteArray = new ByteArray();
+				fileBa.writeObject(obj);
+				fileBa.compress();
+				ExpToolerManager.getInstance().saveFile(fileBa,file);
+			}
+			protected function windowedapplication1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				ExpLogManager.getInstance().init(outPutTxt,statusTxt);
+				var file:File = File.applicationStorageDirectory.resolvePath(CONFIG_FILE);
+				if(file.exists){
+					var ba:ByteArray = ExpToolerManager.getInstance().getFileBA(file);
+					ba.uncompress();
+					var obj:Object = ba.readObject();
+					if(obj.sourcePath){
+						drawPath(obj.sourcePath,SOURCE_TYPE);
+					}
+					if(obj.targetPath){
+						drawPath(obj.targetPath,TARGET_TYPE);
+					}
+					if(obj.flexSDKPath){
+						drawPath(obj.flexSDKPath,SDK_TYPE);
+					}
+				}else{
+					clearCacheInfo();
+				}
+				registerQuene();
+			}
+			private function clearCacheInfo():void{
+				drawPath("",SOURCE_TYPE);
+				drawPath("",TARGET_TYPE);
+				drawPath("",SDK_TYPE);
+			}
+			private function clearHandler(e:Event):void{
+				var file:File = File.applicationStorageDirectory.resolvePath(CONFIG_FILE);
+				if(file.exists){
+					file.deleteFile();
+				}
+				clearCacheInfo();
+			}
+			private static const CONFIG_FILE:String = "config.dat";
+			private static const EXP_SWF_INFO:String = "导出生成SWF";
+			private static const EXP_EXCEL_INFO:String = "导出生成Excel表格数据";
+			private static const ENCODE_MAIN_INFO:String = "加密主程序";
+			private static const CRE_GAMERES_INFO:String = "生成GameResData文件";
+			protected function windowedapplication1_closeHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				ExpToolerManager.getInstance().exitApp();
+			}
+			private function registerQuene():void{
+				ExpPackQueneManager.getInstance().registerPackItem(ExpPackItem.create(ExpPIDKey.EXP_EXPORT_SWF_PID,EXP_SWF_INFO,ExpToolerManager.getInstance().readComipleXMLandCreateBuildXML));
+				ExpPackQueneManager.getInstance().registerPackItem(ExpPackItem.create(ExpPIDKey.EXP_PACK_EXCEL_DATA_PID,EXP_EXCEL_INFO,ExpProcessManager.getInstance().publicExcelData));
+				ExpPackQueneManager.getInstance().registerPackItem(ExpPackItem.create(ExpPIDKey.EXP_ENCODE_SWF_PID,ENCODE_MAIN_INFO,ExpToolerManager.getInstance().encodeMainProSWF));
+				ExpPackQueneManager.getInstance().registerPackItem(ExpPackItem.create(ExpPIDKey.EXP_PACKGE_GAME_RES_DATA_PID,CRE_GAMERES_INFO,ExpGameResDataManager.getInstance().pack));
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:HGroup width="100%" height="100%" paddingLeft="5" paddingRight="5" paddingBottom="5" paddingTop="5">
+		<s:BorderContainer  width="100%" height="100%" borderColor="0x888888" cornerRadius="10">
+			<s:VGroup width="100%" height="100%" paddingTop="15" paddingLeft="15">
+				<s:HGroup width="100%" horizontalAlign="center">
+					<s:Label text="版本发布工具" fontFamily="黑体" fontSize="30" fontWeight="bold"/>
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="26">
+					<s:Label text="FlexSDK目录" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" fontFamily="黑体" fontSize="18" fontWeight="bold" width="150"></s:Label>
+					<s:TextInput id="sdkPath" enabled="false" height="30" width="700" />
+					<s:Button width="80" label="选择" height="30" click="selectSDKPathHandler(event)" />
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="15">
+					<s:Label text="选择源文件夹" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" fontFamily="黑体" fontSize="18" fontWeight="bold" width="150"></s:Label>
+					<s:TextInput id="sPath" enabled="false" height="30" width="700" />
+					<s:Button width="80" label="选择" height="30" click="selectSourceHandler(event)" />
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="15">
+					<s:Label text="选择目标文件夹" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" fontFamily="黑体" fontSize="18" fontWeight="bold" width="150"></s:Label>
+					<s:TextInput id="tPath" enabled="false" height="30" width="700" />
+					<s:Button width="80" label="选择" height="30" click="selectTargetHandler(event)" />
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="15">
+					<s:Label text="代码选项" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" fontFamily="黑体" fontSize="18" fontWeight="bold" width="150"></s:Label>
+					<s:VGroup width="100%">
+						<s:HGroup width="100%">
+							<s:Label text="发布版本" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+							<s:RadioButton id="releaseItem" selected="true" groupName="version" skinClass="com.coolexp.skin.ExpRadioSkin" />
+							<s:Label text="非发布版本" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+							<s:RadioButton id="debugItem" groupName="version" skinClass="com.coolexp.skin.ExpRadioSkin" />
+							<s:Label  backgroundColor="0xFF6600" paddingTop="10" color="0xFFFFFF" height="30" width="50"  text="k1:" />
+							<s:TextInput height="30" width="50" text="2" id="k1" />
+							<s:Label  backgroundColor="0xFF6600" paddingTop="10" color="0xFFFFFF" height="30" width="50" text="k2:" />
+							<s:TextInput height="30" width="50" text="3" id="k2" />
+						</s:HGroup>
+						<s:HGroup width="100%">
+							<s:Label text="主程序" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+							<s:CheckBox id="mainItem" selected="true" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+							<s:Label text="角色创建" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+							<s:CheckBox id="createRoleItem" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+							<s:Label text="壳" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+							<s:CheckBox id="frameItem" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+						</s:HGroup>
+					</s:VGroup>
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="15">
+					<s:Label text="美术资源选项" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" fontFamily="黑体" fontSize="18" fontWeight="bold" width="150"></s:Label>
+					<s:Label text="图片资源" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+					<s:CheckBox id="imgItem" enabled="false" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+					<s:Label text="动画资源" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+					<s:CheckBox id="animationItem" enabled="false" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+					<s:Label text="UI资源" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+					<s:CheckBox id="uiItem" enabled="false" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+					<s:Label text="GameResData" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="130" />
+					<s:CheckBox id="gameResItem"  skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="15">
+					<s:Label text="策划资源选项" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" fontFamily="黑体" fontSize="18" fontWeight="bold" width="150"></s:Label>
+					<s:Label  text="表格打包" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+					<s:CheckBox id="excelItem" selected="true"  skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+					<s:Label text="资源版本号" backgroundColor="0xFF6600" paddingTop="5" color="0xFFFFFF" height="30" textAlign="center" fontFamily="黑体" fontSize="18" fontWeight="bold" width="100" />
+					<s:CheckBox id="resVerItem" enabled="false" skinClass="com.coolexp.skin.ExpCheckBoxSkin" />
+				</s:HGroup>
+				<s:HGroup width="100%" paddingTop="15" >
+					<s:Label width="150"></s:Label>
+					<s:Button label="清除缓存" width="80" height="30" click="clearHandler(event)" />
+					<s:Button label="点击发布" width="80" height="30" click="publishHandler(event)" />
+					<s:Label text="(注:任何路径及文件夹请用中文,并不要包含空格) " paddingTop="10" fontSize="14" color="0xFF0000" />
+				</s:HGroup>
+				
+				<s:VGroup width="100%" paddingTop="20" paddingRight="15">
+					<s:Label id="statusTxt" width="100%" color="0xFF0000" textAlign="center" fontSize="16" text=""/>
+					<s:TextArea id="outPutTxt" width="100%" height="182"  />
+				</s:VGroup>
+			</s:VGroup>
+		</s:BorderContainer>
+	</s:HGroup>
+	
+</s:WindowedApplication>
